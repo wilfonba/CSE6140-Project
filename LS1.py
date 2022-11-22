@@ -4,11 +4,22 @@ import networkx as nx
 import time
 import os
 import random as rand
-from output import printSolutionFile, printTraceFile
+from output import printTraceFile
+import math
+import collections as col
+
+def getScore(C, G, gSE):
+    sortedGC = sorted([sorted(i) for i in list(G.edges(C))])
+    # print(sortedGC)
+    # print(gSE)
+    # print('\n')
+    cost = len(gSE) - len(sortedGC)
+    return cost
+
 
 def LS1(inst, alg, cutOff, rSeed, G):
     i = 0 # standard iterator
-    while (1 and i <= 10):
+    while (1 and i <= 100):
         if os.path.exists("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" + \
                 str(rSeed) + "_" + str(i) + ".trace"):
             i = i + 1
@@ -20,11 +31,14 @@ def LS1(inst, alg, cutOff, rSeed, G):
 
     G1 = G.copy() # Copy of G for greedy IC
     gSD = sorted(G1.degree, key=lambda x: x[1], reverse=True)
+    gSE = sorted([sorted(i) for i in list(G.edges())])
+    gN = sorted(G.nodes())
+    N = len(G.nodes())
     C = [] # Array containing nodes in MVC
 
     # Simulated Annealing Parameters
-    T0 = 500.0 
-    beta = 3.0
+    T0 = 100.0 
+    beta = 2.0
 
     # Initialize stopwatch
     t0 = time.time()
@@ -39,11 +53,36 @@ def LS1(inst, alg, cutOff, rSeed, G):
     while ((time.time() - t0) < cutOff):
         T = T0*(1 - int(cutOff)/(time.time() - t0))**beta # update temperature
 
-        if (len(G.edges(C) - G.edges()) == 0): # C is a vertex cover
+        if (sorted([sorted(i) for i in list(G.edges(C))]) == gSE): # C is a vertex cover
             tC = time.time()
             printTraceFile(len(C), tC - t0, traceFile)
             Cstar = C
+            # print("Cstar")
+            # print(Cstar)
+            # print("\n")
+            C.pop(random.randrange(len(C)))
         else:
-            a = 50
 
-    printSolutionFile(inst, alg, cutOff, rSeed, len(C), C)
+            Cscore = getScore(C, G, gSE)
+
+            v = gN[random.randrange(len(gN))]
+            
+            Ct = C.copy()
+            if (v in C):
+                Ct.remove(v)
+                degFactor = 1 - len(G.edges(v))/N
+            else:
+                Ct = Ct + [v]
+                degFactor = 1 + len(G.edges(v))/N
+                
+            Ctscore = getScore(Ct, G, gSE)
+
+            #print(Cscore, Ctscore)
+
+            if Ctscore < Cscore:
+                C = Ct.copy()
+            else:
+                if math.exp(min((Ctscore - Cscore)*degFactor/T,1)) > random.random():
+                    C = Ct.copy()
+
+    return Cstar

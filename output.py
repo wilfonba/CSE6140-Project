@@ -3,7 +3,7 @@ import os
 # Function to print solution file
 def printSolutionFile(inst, alg, cutOff, rSeed, qual, MVC):
     i = 0 # standard iterator
-    while (1 and i <= 10):
+    while (1 and i <= 100):
         if os.path.exists("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" + \
                 str(rSeed) + "_" + str(i) + ".sol"):
             i = i + 1

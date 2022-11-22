@@ -16,6 +16,7 @@ import BnB
 import Approx
 from LS1 import LS1
 import LS2
+from output import printSolutionFile
 
 # Function for reading the .graph files and creating a networkx graph
 def readInstance(inst):
@@ -35,10 +36,10 @@ def readInstance(inst):
 # Reading input arguments
 inst = str(sys.argv[2])
 alg =  str(sys.argv[4])
-time = int(sys.argv[6])
+cutOff = float(sys.argv[6])
 rSeed = int(sys.argv[8])
 
-print("Running " + alg + " on instance " + inst + " with time limit " + str(time) + \
+print("Running " + alg + " on instance " + inst + " with time limit " + str(cutOff) + \
      " seconds and random seed " + str(rSeed))
 
 # Read the given instance file 
@@ -55,9 +56,10 @@ elif (alg == "Approx"):
     a = 2 # filler
 elif (alg == "LS1"):
     # Run LS1
-    LS1(inst, alg, time, rSeed, G)
+    C = LS1(inst, alg, cutOff, rSeed, G)
 elif (alg == "LS2"):
     a = 4 # filler
 else:
     print("Invalid algorithm")
 
+printSolutionFile(inst, alg, cutOff, rSeed, len(C), C)
