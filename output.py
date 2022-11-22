@@ -1,11 +1,17 @@
 import os
 
 # Function to print solution file
-def printSolutionFile(inst, alg, cutoff, rSeed, qual, MVC):
-    # Remove .sol file if it already exists
-    if os.path.exists("OutputFiles/" + inst + "_" + alg + "_" + str(cutoff) + "_" + str(rSeed) + ".sol"):
-        os.remove("OutputFiles/" + inst + "_" + alg + "_" + str(cutoff) + "_" + str(rSeed) + ".sol")
-    f = open("OutputFiles/" + inst + "_" + alg + "_" + str(cutoff) + "_" + str(rSeed) + ".sol", "x")
+def printSolutionFile(inst, alg, cutOff, rSeed, qual, MVC):
+    i = 0 # standard iterator
+    while (1 and i <= 10):
+        if os.path.exists("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" + \
+                str(rSeed) + "_" + str(i) + ".sol"):
+            i = i + 1
+            print("Here")
+        else:
+            f = open("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" + \
+                str(rSeed) + "_" + str(i) + ".sol", "x")
+            break
     
     f.write(str(qual) + "\n")
     for i in range(0,qual):

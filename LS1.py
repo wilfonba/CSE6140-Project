@@ -7,9 +7,16 @@ import random as rand
 from output import printSolutionFile, printTraceFile
 
 def LS1(inst, alg, cutOff, rSeed, G):
-    if os.path.exists("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" + str(rSeed) + ".trace"):
-        os.remove("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" + str(rSeed) + ".trace")
-    traceFile = open("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" + str(rSeed) + ".trace", "x")
+    i = 0 # standard iterator
+    while (1 and i <= 10):
+        if os.path.exists("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" + \
+                str(rSeed) + "_" + str(i) + ".trace"):
+            i = i + 1
+            print("Here")
+        else:
+            traceFile = open("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" + \
+                str(rSeed) + "_" + str(i) + ".trace", "x")
+            break
 
     G1 = G.copy() # Copy of G for greedy IC
     gSD = sorted(G1.degree, key=lambda x: x[1], reverse=True)
