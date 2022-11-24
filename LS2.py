@@ -41,13 +41,14 @@ def LS2(inst, alg, cutOff, rSeed, G):
     gE = gE[np.argsort(gE[:,0])]
 
     tau = np.zeros((NV,), dtype = int)
+    last_iter = np.zeros((NV,), dtype = int)
     is_sol = np.zeros((NV,), dtype = bool)
     candidates = np.zeros((NV,), dtype = bool)
 
-
+    t0 = time.time()
 
     #Initialize a Maximal Solution
-    for i in range(NV-1, -1, -1):
+    for i in range(NV):
         if(tau[i] == 0):
             is_sol[i] = 1
             neighb = np.array(list(G[gV[i]])).astype(int) - 1
@@ -56,68 +57,133 @@ def LS2(inst, alg, cutOff, rSeed, G):
         else:
             continue  
 
-    prev_soln = len(np.where(is_sol == True)[0])        
-
-
-    #Initialize Candidates
+    prev_soln = len(np.where(is_sol == True)[0]) 
+    best_soln = prev_soln       
     candidates[np.where(is_sol == True)[0]] = True
+
+    count = 0
+    nrestarts = 1000
+
+    while(count < nrestarts):
+        count += 1
+
+        prev_soln = len(np.where(is_sol == True)[0]) 
     
-    #Local Search over all possible 2-improvements
-    while(1):
+        #Local Search over all possible 2-improvements
+        while(1):         
 
-        for x in np.where(candidates == True)[0]:
-            neighb = np.array(list(G[gV[x]])).astype(int) - 1
-            valid_neighb = neighb[np.where(tau[neighb] == 1)[0]]
+            for x in np.where(candidates == True)[0]:
+                neighb = np.array(list(G[gV[x]])).astype(int) - 1
+                valid_neighb = neighb[np.where(tau[neighb] == 1)[0]]
 
-            if(len(valid_neighb) >= 2):
-                for i in range(len(valid_neighb)):
-                    for j in range(i+1, len(valid_neighb)):
+                if(len(valid_neighb) >= 2):
+                    for i in range(len(valid_neighb)):
+                        for j in range(i+1, len(valid_neighb)):
 
-                        u = valid_neighb[i] 
-                        v = valid_neighb[j]
+                            u = valid_neighb[i] 
+                            v = valid_neighb[j]
 
-                        neighbu = np.array(list(G[gV[u]])).astype(int) - 1
-                        if(v  in neighbu):
-                            continue
-                        neighbv = np.array(list(G[gV[v]])).astype(int) - 1
+                            neighbu = np.array(list(G[gV[u]])).astype(int) - 1
+                            if(v  in neighbu):
+                                continue
+                            neighbv = np.array(list(G[gV[v]])).astype(int) - 1
 
-                        candidates[u] = True
-                        candidates[v] = True
-                        candidates[x] = False
+                            candidates[u] = True
+                            candidates[v] = True
+                            candidates[x] = False
 
-                        is_sol[u] = True
-                        is_sol[v] = True
-                        is_sol[x] = False
+                            is_sol[u] = True
+                            is_sol[v] = True
+                            is_sol[x] = False
 
-                        tau[neighb] -= 1
-                        tau[neighbu] += 1                    
-                        tau[neighbv] += 1
+                            tau[neighb] -= 1
+                            tau[neighbu] += 1                    
+                            tau[neighbv] += 1
 
-                        for w in neighb[np.where(tau[neighb] == 1)[0]]:
-                            neighbw =  np.array(list(G[gV[w]])).astype(int) - 1
-                            neighbw = neighbw[np.where(is_sol[neighbw] == True)[0]]
-                            candidates[neighbw] = True
+                            for w in neighb[np.where(tau[neighb] == 1)[0]]:
+                                neighbw =  np.array(list(G[gV[w]])).astype(int) - 1
+                                neighbw = neighbw[np.where(is_sol[neighbw] == True)[0]]
+                                candidates[neighbw] = True
 
-                        break
+                            break
+
+                        if(tau[x] == 2):
+                            break
 
                     if(tau[x] == 2):
                         break
 
-                if(tau[x] == 2):
-                    break
+                    candidates[x] = False
+                    
+                else:
+                    candidates[x] = False
 
-                candidates[x] = False
-                
+
+            new_soln = len(np.where(is_sol == True)[0])
+            if(new_soln == prev_soln):
+                break
+            prev_soln = new_soln
+
+
+        for i in range(NV):
+            if(tau[i] == 0 and is_sol[i] == False):
+                is_sol[i] = True
+                candidates[i] = True
+                neighb = np.array(list(G[gV[i]])).astype(int) - 1
+                for j in neighb :
+                    tau[j] += 1
             else:
-                candidates[x] = False
+               continue
 
         new_soln = len(np.where(is_sol == True)[0])
-        if(new_soln == prev_soln):
-            break
-        prev_soln = new_soln
 
-    print("soln", (NV - new_soln))    
-    C = [] 
-    for i in np.where(is_sol == False)[0]:
-        C.append(i)       
+        last_iter[np.where(is_sol == False)[0]] += 1
+        last_iter[np.where(is_sol == True)[0]]= 0 
+
+        if(new_soln > best_soln):
+            best_soln = new_soln    
+            print("soln", (NV - new_soln))    
+            C = [] 
+            for i in np.where(is_sol == False)[0]:
+                C.append(i)
+            tf = time.time()
+            printTraceFile(len(C), tf - t0, traceFile)
+            if(tf - t0  > cutOff):
+                print(tf - t0)
+                return C
+
+        #Perturb New Solution
+        pertbs = np.where(last_iter == np.amax(last_iter))[0]
+        elem = pertbs[np.random.randint(np.size(pertbs))]
+        is_sol[elem] = True
+        candidates[elem] = True
+        
+
+        neighb = np.array(list(G[gV[elem]])).astype(int) - 1 
+        tau[neighb[np.where(is_sol[neighb] == False)[0]]] += 1
+        remove_elem = neighb[np.where(is_sol[neighb] == True)[0]]
+        is_sol[remove_elem] = False
+        candidates[remove_elem] = False
+        tau[remove_elem] += 1
+
+        for k in remove_elem:
+            neighbk = np.array(list(G[gV[k]])).astype(int) - 1
+
+            tau[neighbk] -= 1
+
+            for w in neighbk[np.where(tau[neighbk] == 1)[0]]:
+                neighbw =  np.array(list(G[gV[w]])).astype(int) - 1
+                neighbw = neighbw[np.where(is_sol[neighbw] == True)[0]]
+                candidates[neighbw] = True
+
+        for i in range(NV):
+            if(tau[i] == 0 and is_sol[i] == False):
+                is_sol[i] = True
+                candidates[i] = True
+                neighb = np.array(list(G[gV[i]])).astype(int) - 1
+                for j in neighb :
+                    tau[j] += 1
+            else:
+                continue
+
     return C
