@@ -7,7 +7,6 @@ def printSolutionFile(inst, alg, cutOff, rSeed, qual, MVC):
         if os.path.exists("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" + \
                 str(rSeed) + "_" + str(i) + ".sol"):
             i = i + 1
-            print("Here")
         else:
             f = open("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" + \
                 str(rSeed) + "_" + str(i) + ".sol", "x")
