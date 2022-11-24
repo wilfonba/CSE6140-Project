@@ -15,7 +15,7 @@ import random
 import BnB
 import Approx
 from LS1 import LS1
-import LS2
+from LS2 import LS2
 from output import printSolutionFile
 
 # Function for reading the .graph files and creating a networkx graph
@@ -58,7 +58,7 @@ elif (alg == "LS1"):
     # Run LS1
     C = LS1(inst, alg, cutOff, rSeed, G)
 elif (alg == "LS2"):
-    a = 4 # filler
+    C = LS2(inst, alg, cutOff, rSeed, G)
 else:
     print("Invalid algorithm")
 
