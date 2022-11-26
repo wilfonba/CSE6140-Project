@@ -7,6 +7,7 @@ import random as rand
 from output import printTraceFile
 import math
 import collections as col
+from utils import checker
 
 def Approx(inst, alg, cutOff, rSeed, G):
     random.seed(rSeed)
@@ -24,8 +25,8 @@ def Approx(inst, alg, cutOff, rSeed, G):
 
     G1 = G.copy()
     C = []  # list of the vertices for the Vertex Cover to be returned
-    getEdge = getRandomEdge
-    # getEdge = getMaxDegreeEdge
+    # getEdge = getRandomEdge
+    getEdge = getMaxDegreeEdge
     
     start = time.time()
     while time.time() - start < cutOff:
@@ -48,6 +49,7 @@ def Approx(inst, alg, cutOff, rSeed, G):
     duration = time.time() - start 
 
     # Trace File for the Greedy Approx algorithm is just one line (https://piazza.com/class/l725zf0sivy53i/post/151_f12)
+    assert checker(G, C)
     printTraceFile(len(C), duration, traceFile)
     
     return C 
