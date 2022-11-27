@@ -9,13 +9,8 @@ import math
 import collections as col
 
 def getScore(C, G, gSE):
-    sortedGC = sorted([sorted(i) for i in list(G.edges(C))])
-    # print(sortedGC)
-    # print(gSE)
-    # print('\n')
-    cost = len(gSE) - len(sortedGC)
+    cost = len(gSE) - len(G.edges(C))
     return cost
-
 
 def LS1(inst, alg, cutOff, rSeed, G):
     i = 0 # standard iterator
@@ -37,14 +32,14 @@ def LS1(inst, alg, cutOff, rSeed, G):
     C = [] # Array containing nodes in MVC
 
     # Simulated Annealing Parameters
-    T0 = 100.0 
-    beta = 2.0
+    T0 = 5.0 
+    beta = 2
 
     # Initialize stopwatch
     t0 = time.time()
     
     # Determine an IC using Maximum Degree Greedy, C is a VC of the original G
-    while (len(nx.edges(G1)) > 0):
+    while (len(nx.edges(G1)) > 0): 
         G1.remove_node(gSD[0][0])
         C.append(gSD[0][0])
         gSD.remove(gSD[0])
@@ -57,12 +52,8 @@ def LS1(inst, alg, cutOff, rSeed, G):
             tC = time.time()
             printTraceFile(len(C), tC - t0, traceFile)
             Cstar = C
-            # print("Cstar")
-            # print(Cstar)
-            # print("\n")
             C.pop(random.randrange(len(C)))
         else:
-
             Cscore = getScore(C, G, gSE)
 
             v = gN[random.randrange(len(gN))]
@@ -74,15 +65,13 @@ def LS1(inst, alg, cutOff, rSeed, G):
             else:
                 Ct = Ct + [v]
                 degFactor = 1 + len(G.edges(v))/N
-                
-            Ctscore = getScore(Ct, G, gSE)
 
-            #print(Cscore, Ctscore)
+            Ctscore = getScore(Ct, G, gSE)
 
             if Ctscore < Cscore:
                 C = Ct.copy()
             else:
-                if math.exp(min((Ctscore - Cscore)*degFactor/T,1)) > random.random():
+                if math.exp(min((Cscore - Ctscore)*degFactor/T,1)) > random.random():
                     C = Ct.copy()
 
     return Cstar
