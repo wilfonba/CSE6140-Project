@@ -13,7 +13,7 @@ import sys
 import networkx as nx
 import random
 import BnB
-import Approx
+from Approx import Approx
 from LS1 import LS1
 from LS2 import LS2
 from output import printSolutionFile
@@ -54,6 +54,7 @@ if (alg == "BnB"):
 elif (alg == "Approx"):
     # Run Approx
     a = 2 # filler
+    C = Approx(inst, alg, cutOff, rSeed, G)
 elif (alg == "LS1"):
     # Run LS1
     C = LS1(inst, alg, cutOff, rSeed, G)
