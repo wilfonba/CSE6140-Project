@@ -1,4 +1,3 @@
-# Implementation of Simmulated Annealing
 import random
 import networkx as nx
 import time
@@ -7,10 +6,73 @@ import random as rand
 from output import printTraceFile
 import math
 import collections as col
+import numpy as np
+import sys
 
-def getScore(C, G, gSE):
-    cost = len(gSE) - len(G.edges(C))
-    return cost
+###############################################################
+
+def getMaxDegreeEdge(E, G1) -> tuple:
+    maxDegree = 0
+    max_u, max_v = -1, -1
+    for e in E:
+        u, v = e[0], e[1]
+        u_degree = G1.degree[u]
+        v_degree = G1.degree[v]
+        degree = u_degree + v_degree
+        if maxDegree < degree:
+            maxDegree = degree 
+            max_u = u 
+            max_v = v
+    return max_u, max_v
+
+###############################################################
+
+def greedyIC(t0, cutOff, G):
+    GT = G.copy()
+    E = GT.edges()
+    VC = []
+    while(len(E) != 0):
+        E = GT.edges()
+        (u,v) = getMaxDegreeEdge(E, GT)
+        
+        GT.remove_node(u)
+        GT.remove_node(v)
+
+        VC.append(u)
+        VC.append(v)
+
+        if time.time() - t0 > cutOff:
+            sys.exit("No IC Found, provide a longer cutoff")     
+    return VC
+
+###############################################################
+
+def removeNode(VC,ucE,dscores,v,G,eWS,confChange):
+    dscores[int(v)] = -dscores[int(v)]
+    confChange[int(v)] = 0
+    for u in G.neighbors(v):
+        if u not in VC:
+            ucE.append((str(v),str(u)))
+            ucE.append((str(u),str(v)))
+            confChange[int(u)] = 1
+            dscores[int(u)] += eWS[str(v)][str(u)]
+        else:
+            dscores[int(u)] -= eWS[str(v)][str(u)]
+
+###############################################################
+
+def addNode(VC,ucE,dscores,v,G,eWS,confChange):
+    dscores[int(v)] = -dscores[int(v)]
+    for u in G.neighbors(str(v)):
+        if u not in VC:
+            ucE.remove((str(v),str(u)))
+            ucE.remove((str(u),str(v)))
+            dscores[int(u)] -= eWS[str(v)][str(u)]
+            confChange[int(u)] = 1
+        else:
+            dscores[int(u)] += eWS[str(v)][str(u)]
+
+###############################################################    
 
 def LS1(inst, alg, cutOff, rSeed, G):
     i = 0 # standard iterator
@@ -24,54 +86,80 @@ def LS1(inst, alg, cutOff, rSeed, G):
                 str(rSeed) + "_" + str(i) + ".trace", "x")
             break
 
-    G1 = G.copy() # Copy of G for greedy IC
-    gSD = sorted(G1.degree, key=lambda x: x[1], reverse=True)
-    gSE = sorted([sorted(i) for i in list(G.edges())])
-    gN = sorted(G.nodes())
-    N = len(G.nodes())
-    C = [] # Array containing nodes in MVC
+    nV = len(G.nodes) # number of nodes
+    nE = len(G.edges) # number of edges
+    ucE = [] # array of uncovered edges
 
-    # Simulated Annealing Parameters
-    T0 = 5.0 
-    beta = 2
+    gamma = 10 # mean edge weight for forgetting
+    rho = 0.01 # "forget" parameter
 
-    # Initialize stopwatch
     t0 = time.time()
-    
-    # Determine an IC using Maximum Degree Greedy, C is a VC of the original G
-    while (len(nx.edges(G1)) > 0): 
-        G1.remove_node(gSD[0][0])
-        C.append(gSD[0][0])
-        gSD.remove(gSD[0])
 
-    # Simulated annealing iteration
-    while ((time.time() - t0) < cutOff):
-        T = T0*(1 - int(cutOff)/(time.time() - t0))**beta # update temperature
+    eWS = nx.convert.to_dict_of_dicts(G, edge_data=1)
+    dScores = [0]*(nV+1)
+    confChange = [1]*(nV+1)
 
-        if (sorted([sorted(i) for i in list(G.edges(C))]) == gSE): # C is a vertex cover
-            tC = time.time()
-            printTraceFile(len(C), tC - t0, traceFile)
-            Cstar = C
-            C.pop(random.randrange(len(C)))
+    VC = greedyIC(t0, cutOff, G)
+
+    printTraceFile(len(VC), time.time() - t0, traceFile)
+
+    i = 0
+    while (time.time() - t0 < cutOff):
+        if len(ucE) == 0:
+            printTraceFile(len(VC), time.time() - t0, traceFile)
+            VCStar = VC.copy()
+            maxC = -float('inf')
+            for v in VC:
+                if dScores[int(v)] > maxC:
+                    maxC = dScores[int(v)]
+                    optV = v
+            removeNode(VC,ucE,dScores,str(optV),G,eWS,confChange)
+            VC.remove(optV)
+
+        # Step 1: Remove node with max improvement
+        maxC = -float('inf')
+        for v in VC:
+            if dScores[int(v)] > maxC:
+                maxC = dScores[int(v)]
+                optV = v
+        removeNode(VC,ucE,dScores,str(optV),G,eWS,confChange)
+        VC.remove(optV)
+        print("Remove")
+        print(VC)
+        
+        # Step 2: Add node from random uncovered edge
+        rE = random.choice(ucE)
+        rE = [int(rE[0]),int(rE[1])]
+        if confChange[rE[0]] == 0 and rE[1] not in VC: 
+            bV = rE[1]
+        elif confChange[rE[1]] == 0 and rE[0] not in VC:
+            bV = rE[0]
         else:
-            Cscore = getScore(C, G, gSE)
-
-            v = gN[random.randrange(len(gN))]
-            
-            Ct = C.copy()
-            if (v in C):
-                Ct.remove(v)
-                degFactor = 1 - len(G.edges(v))/N
+            if dScores[rE[0]] > dScores[rE[1]]:
+                bV = rE[0]
             else:
-                Ct = Ct + [v]
-                degFactor = 1 + len(G.edges(v))/N
+                bV = rE[1]
 
-            Ctscore = getScore(Ct, G, gSE)
+        addNode(VC,ucE,dScores,bV,G,eWS,confChange)
+        VC.append(bV)
+        print("Add")
+        print(VC)
+        
+        # Update edge weights and score functions
+        for e in ucE:
+            eWS[e[1]][e[0]] += 1				
+            dScores[int(e[0])] += 1
 
-            if Ctscore < Cscore:
-                C = Ct.copy()
-            else:
-                if math.exp(min((Cscore - Ctscore)*degFactor/T,1)) > random.random():
-                    C = Ct.copy()
+        # Calculate mean edge weight
+        total = 0
+        for root,target in eWS.items():
+            for val in target:
+                total += int(val)
+        mW = total/len(eWS)
 
-    return Cstar
+        # Update edge weights
+        for root,target in eWS.items():
+            for val in target:
+                val = str(np.floor(rho*int(val)))
+
+    return VCStar
