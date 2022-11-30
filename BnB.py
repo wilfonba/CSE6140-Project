@@ -63,6 +63,10 @@ def BnB(inst, alg, cutOff, rSeed, G):
 
         # Check solution for each new configuration
         for C in C_list:
+            # If C is already larger than B
+            # Do not consider as a solution
+            if len(C) > len(B):
+                break
             count = next(counter)
             sol = utils.checker(G, C)
             if sol == True:
