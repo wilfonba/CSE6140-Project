@@ -48,29 +48,29 @@ def greedyIC(t0, cutOff, G):
 ###############################################################
 
 def removeNode(VC,ucE,dscores,v,G,eWS,confChange):
-    dscores[int(v)] = -dscores[int(v)]
-    confChange[int(v)] = 0
+    dscores[int(v)-1] = -dscores[int(v)-1]
+    confChange[int(v)-1] = 0
     for u in G.neighbors(v):
         if u not in VC:
             ucE.append((str(v),str(u)))
             ucE.append((str(u),str(v)))
-            confChange[int(u)] = 1
-            dscores[int(u)] += eWS[str(v)][str(u)]
+            confChange[int(u)-1] = 1
+            dscores[int(u)-1] += eWS[str(v)][str(u)]
         else:
-            dscores[int(u)] -= eWS[str(v)][str(u)]
+            dscores[int(u)-1] -= eWS[str(v)][str(u)]
 
 ###############################################################
 
 def addNode(VC,ucE,dscores,v,G,eWS,confChange):
-    dscores[int(v)] = -dscores[int(v)]
+    dscores[int(v)-1] = -dscores[int(v)-1]
     for u in G.neighbors(str(v)):
         if u not in VC:
             ucE.remove((str(v),str(u)))
             ucE.remove((str(u),str(v)))
-            dscores[int(u)] -= eWS[str(v)][str(u)]
-            confChange[int(u)] = 1
+            dscores[int(u)-1] -= eWS[str(v)][str(u)]
+            confChange[int(u)-1] = 1
         else:
-            dscores[int(u)] += eWS[str(v)][str(u)]
+            dscores[int(u)-1] += eWS[str(v)][str(u)]
 
 ###############################################################    
 
@@ -80,7 +80,6 @@ def LS1(inst, alg, cutOff, rSeed, G):
         if os.path.exists("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" + \
                 str(rSeed) + "_" + str(i) + ".trace"):
             i = i + 1
-            print("Here")
         else:
             traceFile = open("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" + \
                 str(rSeed) + "_" + str(i) + ".trace", "x")
@@ -90,28 +89,32 @@ def LS1(inst, alg, cutOff, rSeed, G):
     nE = len(G.edges) # number of edges
     ucE = [] # array of uncovered edges
 
-    gamma = 10 # mean edge weight for forgetting
-    rho = 0.01 # "forget" parameter
+    gamma = 0.5*nV # mean edge weight for forgetting
+    rho = 0.1 # "forget" parameter
 
     t0 = time.time()
 
     eWS = nx.convert.to_dict_of_dicts(G, edge_data=1)
-    dScores = [0]*(nV+1)
-    confChange = [1]*(nV+1)
+    dScores = [0]*(nV)
+    confChange = [1]*(nV)
 
-    VC = greedyIC(t0, cutOff, G)
-
-    printTraceFile(len(VC), time.time() - t0, traceFile)
-
+    VC1 = greedyIC(t0, cutOff, G)
+    VC = list(G.nodes())
+    
+    for i in G.nodes():
+        if i not in VC1:
+            removeNode(VC, ucE, dScores, str(i), G, eWS, confChange)
+            VC.remove(str(i))
+    
     i = 0
     while (time.time() - t0 < cutOff):
-        if len(ucE) == 0:
+        while len(ucE) == 0:
             printTraceFile(len(VC), time.time() - t0, traceFile)
             VCStar = VC.copy()
             maxC = -float('inf')
             for v in VC:
-                if dScores[int(v)] > maxC:
-                    maxC = dScores[int(v)]
+                if dScores[int(v)-1] > maxC:
+                    maxC = dScores[int(v)-1]
                     optV = v
             removeNode(VC,ucE,dScores,str(optV),G,eWS,confChange)
             VC.remove(optV)
@@ -119,36 +122,32 @@ def LS1(inst, alg, cutOff, rSeed, G):
         # Step 1: Remove node with max improvement
         maxC = -float('inf')
         for v in VC:
-            if dScores[int(v)] > maxC:
-                maxC = dScores[int(v)]
+            if dScores[int(v)-1] > maxC:
+                maxC = dScores[int(v)-1]
                 optV = v
         removeNode(VC,ucE,dScores,str(optV),G,eWS,confChange)
         VC.remove(optV)
-        print("Remove")
-        print(VC)
-        
+
         # Step 2: Add node from random uncovered edge
         rE = random.choice(ucE)
         rE = [int(rE[0]),int(rE[1])]
-        if confChange[rE[0]] == 0 and rE[1] not in VC: 
+        if confChange[rE[0]-1] == 0 and rE[1] not in VC: 
             bV = rE[1]
-        elif confChange[rE[1]] == 0 and rE[0] not in VC:
+        elif confChange[rE[1]-1] == 0 and rE[0] not in VC:
             bV = rE[0]
         else:
-            if dScores[rE[0]] > dScores[rE[1]]:
+            if dScores[rE[0]-1] > dScores[rE[1]-1]:
                 bV = rE[0]
             else:
                 bV = rE[1]
 
         addNode(VC,ucE,dScores,bV,G,eWS,confChange)
-        VC.append(bV)
-        print("Add")
-        print(VC)
-        
+        VC.append(str(bV))
+
         # Update edge weights and score functions
         for e in ucE:
-            eWS[e[1]][e[0]] += 1				
-            dScores[int(e[0])] += 1
+            eWS[e[0]][e[1]] += 1				
+            dScores[int(e[0])-1] += 1
 
         # Calculate mean edge weight
         total = 0
@@ -158,8 +157,18 @@ def LS1(inst, alg, cutOff, rSeed, G):
         mW = total/len(eWS)
 
         # Update edge weights
-        for root,target in eWS.items():
-            for val in target:
-                val = str(np.floor(rho*int(val)))
+        if mW > gamma:
+            dScores = [0]*(nV+1)
+            ucE = []
+            VC1 = VC
+            VC = list(G.nodes())
+            
+            for i in G.nodes():
+                if i not in VC1:
+                    removeNode(VC, ucE, dScores, str(i), G, eWS, confChange)
+                    VC.remove(str(i))
+    
+    i = 0
 
+    print("Result: " + str(len(VCStar)))
     return VCStar
