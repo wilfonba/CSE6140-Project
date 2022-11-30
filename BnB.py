@@ -8,12 +8,6 @@ import math
 import collections as col
 from utils import checker
 import sys
-import networkx as nx
-import random
-import BnB
-from Approx import Approx
-from LS1 import LS1
-from LS2 import LS2
 from output import printSolutionFile
 import heapq as hq
 import itertools

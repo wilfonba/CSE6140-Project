@@ -3,7 +3,7 @@
 #   -inst <filename>
 #   -alg <BnB|Approx|LS1|LS2>
 #       BnB : Branch and Bound
-#       Approx : 
+#       Approx :
 #       LS1 : Simmulated Annealing
 #       LS2 :
 #   -time <cutoff in seconds>
@@ -12,13 +12,15 @@
 import sys
 import networkx as nx
 import random
-import BnB
+from BnB import BnB
 from Approx import Approx
 from LS1 import LS1
 from LS2 import LS2
 from output import printSolutionFile
 
 # Function for reading the .graph files and creating a networkx graph
+
+
 def readInstance(inst):
     f = open("DATA/" + inst + ".graph", 'r')
     lines = f.readline().split(" ")
@@ -43,22 +45,21 @@ alg = "BnB"
 cutOff = 100
 rSeed = 234
 
-print("Running " + alg + " on instance " + inst + " with time limit " + str(cutOff) + \
-     " seconds and random seed " + str(rSeed))
+print("Running " + alg + " on instance " + inst + " with time limit " + str(cutOff) +
+      " seconds and random seed " + str(rSeed))
 
-# Read the given instance file 
+# Read the given instance file
 G = readInstance(inst)
 
-# Set the random seed 
+# Set the random seed
 random.seed(rSeed)
 
 if (alg == "BnB"):
     # run BnB
-    a = 1 # filler
     C = BnB(inst, alg, cutOff, rSeed, G)
 elif (alg == "Approx"):
     # Run Approx
-    a = 2 # filler
+    a = 2  # filler
     C = Approx(inst, alg, cutOff, rSeed, G)
 elif (alg == "LS1"):
     # Run LS1
