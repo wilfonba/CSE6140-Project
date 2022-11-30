@@ -39,7 +39,7 @@ def readInstance(inst):
 # cutOff = float(sys.argv[6])
 # rSeed = int(sys.argv[8])
 inst = 'dummy2'
-alg = "LS1"
+alg = "BnB"
 cutOff = 100
 rSeed = 234
 
@@ -55,6 +55,7 @@ random.seed(rSeed)
 if (alg == "BnB"):
     # run BnB
     a = 1 # filler
+    C = BnB(inst, alg, cutOff, rSeed, G)
 elif (alg == "Approx"):
     # Run Approx
     a = 2 # filler
