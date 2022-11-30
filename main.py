@@ -40,9 +40,9 @@ def readInstance(inst):
 # alg =  str(sys.argv[4])
 # cutOff = float(sys.argv[6])
 # rSeed = int(sys.argv[8])
-inst = 'dummy2'
-alg = "BnB"
-cutOff = 100
+inst = 'hep-th'
+alg = "LS1"
+cutOff = 30
 rSeed = 234
 
 print("Running " + alg + " on instance " + inst + " with time limit " + str(cutOff) +
