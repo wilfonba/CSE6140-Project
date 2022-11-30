@@ -69,10 +69,13 @@ def BnB(inst, alg, cutOff, rSeed, G):
                 if len(C) < len(B):
                     B = C  # Update upper bound if better soln found
                     sizeB = len(B)
+                    # Print to trace
+                    duration = time.time() - start
+                    printTraceFile(len(C), duration, traceFile)
             else:  # Add new subproblem to heap
                 if level + 1 <= len(list(G.nodes)):  # Ensure level is inbounds
                     G_prime = G.subgraph(G.nodes - C)
-                    new_lower_bound = compute_lower_bound(G_prime)
+                    new_lower_bound = len(C) + compute_lower_bound(G_prime)
                     if new_lower_bound < sizeB:
                         hq.heappush(pq, (new_lower_bound, count, C, level))
 
