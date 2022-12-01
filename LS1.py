@@ -86,11 +86,10 @@ def LS1(inst, alg, cutOff, rSeed, G):
             break
 
     nV = len(G.nodes) # number of nodes
-    nE = len(G.edges) # number of edges
     ucE = [] # array of uncovered edges
 
     gamma = 0.5*nV # mean edge weight for forgetting
-    rho = 0.1 # "forget" parameter
+    rho = 0.3 # "forget" parameter
 
     t0 = time.time()
 
@@ -109,6 +108,7 @@ def LS1(inst, alg, cutOff, rSeed, G):
     i = 0
     while (time.time() - t0 < cutOff):
         while len(ucE) == 0:
+            print("Soln:", len(VC))
             printTraceFile(len(VC), time.time() - t0, traceFile)
             VCStar = VC.copy()
             maxC = -float('inf')
@@ -150,10 +150,9 @@ def LS1(inst, alg, cutOff, rSeed, G):
             dScores[int(e[0])-1] += 1
 
         # Calculate mean edge weight
-        total = 0
-        for root,target in eWS.items():
-            for val in target:
-                total += int(val)
+        total = int(0)
+        for e in G.edges():
+            total += int(eWS[e[0]][e[1]])
         mW = total/len(eWS)
 
         # Update edge weights
@@ -167,7 +166,8 @@ def LS1(inst, alg, cutOff, rSeed, G):
                 if i not in VC1:
                     removeNode(VC, ucE, dScores, str(i), G, eWS, confChange)
                     VC.remove(str(i))
-    
+            for e in G.edges():
+                eWS[e[0]][e[1]] = rho*eWS[e[0]][e[1]]
     i = 0
 
     print("Result: " + str(len(VCStar)))
