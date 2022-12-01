@@ -30,11 +30,19 @@ def BnB(inst, alg, cutOff, rSeed, G):
             break
 
     # Begin BnB
-    # Preprocess G to remove isolated nodes
+    # Preprocess G to remove isolated nodes and presort according to node degree
     G.remove_nodes_from(list(nx.isolates(G)))
+    G_sorted = sorted(G.nodes(), key=lambda n: G.degree(n), reverse=True)
+    H = nx.Graph()
+    H.add_nodes_from(G_sorted)
+    H.add_edges_from(G.edges(data=True))
+    G = H
+
     # Initialize variables
     C_init = []              # list of the vertices for the Vertex Cover to be returned
     C_list = [[], []]
+    # Used to control lower bound, s.t. frontier updated with new point first
+    C_bounds = [0, float('-inf')]
     G_prime = G.copy()
     B = list(G.nodes)   # Initialize upper bound to all vertices
     sizeB = len(B)      # Size for priority queue
@@ -65,12 +73,13 @@ def BnB(inst, alg, cutOff, rSeed, G):
         level = level + 1
 
         # Check solution for each new configuration
-        for C in C_list:
+        for i in range(len(C_list)):
+            C = C_list[i]
+            bound_limit = C_bounds[i]
             # If C is already larger than B
             # Do not consider as a solution
             if len(C) > len(B):
                 break
-            count = next(counter)
             sol = utils.checker(G, C)
             if sol == True:
                 if len(C) < len(B):
@@ -80,14 +89,18 @@ def BnB(inst, alg, cutOff, rSeed, G):
                     duration = time.time() - start
                     printTraceFile(len(C), duration, traceFile)
             else:  # Add new subproblem to heap
-                if level + 1 <= len(list(G.nodes)):  # Ensure level is inbounds
+                if level < len(list(G.nodes)):  # Ensure level is inbounds
                     G_prime = G.subgraph(list(G.nodes)[level:])
                     new_lower_bound = len(
                         C) + compute_lower_bound(cutOff, rSeed, G_prime)
+                    # Extract highest degree node
+                    degree_bound = max(-list(G.degree)[level][1], bound_limit)
                     # new_lower_bound = len(C) + compute_lower_bound_simple(G_prime)
                     if new_lower_bound < sizeB:
                         if new_lower_bound >= min_bound:
-                            hq.heappush(pq, (new_lower_bound, count, C, level))
+                            count = next(counter)
+                            # hq.heappush(pq, (new_lower_bound, count, C, level))
+                            hq.heappush(pq, (degree_bound, -count, C, level))
 
     duration = time.time() - start
 
