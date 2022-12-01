@@ -78,7 +78,7 @@ def BnB(inst, alg, cutOff, rSeed, G):
             bound_limit = C_bounds[i]
             # If C is already larger than B
             # Do not consider as a solution
-            if len(C) > len(B):
+            if len(C) >= len(B):
                 break
             sol = utils.checker(G, C)
             if sol == True:
@@ -91,13 +91,20 @@ def BnB(inst, alg, cutOff, rSeed, G):
             else:  # Add new subproblem to heap
                 if level < len(list(G.nodes)):  # Ensure level is inbounds
                     G_prime = G.subgraph(list(G.nodes)[level:])
+                    # G_prime_lower_bound = compute_lower_bound(cutOff, rSeed, G_prime)
+                    G_prime_lower_bound = compute_lower_bound_simple2(G_prime)
                     new_lower_bound = len(
-                        C) + compute_lower_bound(cutOff, rSeed, G_prime)
+                        C) + G_prime_lower_bound
                     # Extract highest degree node
-                    degree_bound = max(-list(G.degree)[level][1], bound_limit)
+                    degree_bound = max(-list(G.degree)
+                                       [level+1][1], bound_limit)
                     # new_lower_bound = len(C) + compute_lower_bound_simple(G_prime)
                     if new_lower_bound < sizeB:
-                        if new_lower_bound >= min_bound:
+                        # if new_lower_bound >= min_bound:
+                        # if G_prime_lower_bound > 0:
+                        max_deg_node = max(
+                            list(G_prime.degree), key=lambda x: x[1])[1]
+                        if max_deg_node > 0:
                             count = next(counter)
                             # hq.heappush(pq, (new_lower_bound, count, C, level))
                             hq.heappush(pq, (degree_bound, -count, C, level))
@@ -126,6 +133,20 @@ def compute_lower_bound_simple(G):
 
     return k
 
+
+def compute_lower_bound_simple2(G):
+    # Simple lower bound given by K&T 10.2, pg. 556
+    nodes = len(list(G.nodes))
+    edges = len(list(G.edges))
+    maxedge = max(list(G.degree))[1]
+    if maxedge == 0:
+        k = int(math.ceil(edges/nodes))
+        return k
+    k = int(math.ceil(edges/maxedge))
+    if k > nodes:
+        k = nodes
+
+    return k
 ###############################################################
 
 
