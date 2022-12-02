@@ -34,9 +34,9 @@ for alg in ALG:
         bins[int(np.floor(i[0] * 10)):,int(np.floor(relSQ*100)):] = bins[int(np.floor(i[0] * 10)):,int(np.floor(relSQ*100)):] + 1
         count[int(np.floor(i[0] * 10)),int(np.floor(relSQ*100))] = count[int(np.floor(i[0] * 10)),int(np.floor(relSQ*100))] + 1
 
-    for i in range(55):
+    for i in range(110):
         for j in range(100):
-                bins[i,j] = bins[i,j]
+                bins[i,j] = bins[i,j]/count[:i+1,:j+1].sum()
 
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
