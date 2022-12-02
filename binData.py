@@ -63,58 +63,83 @@ for inst in ['star2', 'power']:
         #(Fixed % relative error asumme < 10)
         if(inst == "power"):
             if(alg == 'LS1'):
-                q = 2.4 
+                e = 1.0
             else:
-                q = 0.8
+                e = 1.4
         if(inst == "star2"):
             if(alg == 'LS1'):
-                q = 4.2
+                e = 4.4
             else:
-                q = 3.2
+                e = 3.2
 
-        X = np.arange(0, 110, 1)
-        X = X / 10
-        Y = np.zeros((110,))
+        LX = []
+        LY = []
+        Lq =[]
 
-        
+        for delta in [-0.4, -0.2, 0, 0.2, 0.4, 0.6]:
+            q = np.round(e + delta, 1)
 
-        for i in range(110):      
-            Y[i] = (np.sum(bins[i, int(np.floor(10*q)), :])/nseeds)*100.0
+
+            X = np.arange(0, 110, 1)
+            X = X / 10
+            Y = np.zeros((110,))
+
+            
+
+            for i in range(110):      
+                Y[i] = (np.sum(bins[i, int(np.floor(10*q)), :])/nseeds)*100.0
+
+            LX.append(X)
+            LY.append(Y)
+            Lq.append(q)
 
 
         plt.figure()
-        plt.plot(X, Y)
+        for i in range(6):
+            plt.plot(LX[i], LY[i], label = str(Lq[i]) + " %")
         plt.xlabel("Time (s)")
         plt.ylabel("Succes (%)")
-        plt.title("Rel Err = " + str(q) + " %")
-        plt.savefig("figs/part1/" + str(alg) + "_" + str(inst) + "_" + str(q) + ".png")
+        plt.legend()
+        plt.savefig("figs/part1/" + str(alg) + "_" + str(inst) + ".png")
 
         #Second Part
         #Fixed Cutoff time (in seconds)
         if(inst == "power"):
             if(alg == 'LS1'):
-                t = 3 
+                e = 3.0
             else:
-                t = 0.5
+                e = 0.5
         if(inst == "star2"):
             if(alg == 'LS1'):
-                t = 3 
+                e = 1 
             else:
-                t = 0.5
+                e = 0.5
+
+        LX2 = []
+        LY2 = []
+        Lt = []
+
+        for delta in [0, 1, 2, 3, 4]:
+            t = e + delta
 
 
-        X2 = np.arange(0, 10, 0.1)
-        Y2 = np.zeros((np.size(X2)))
+            X2 = np.arange(0, 10, 0.1)
+            Y2 = np.zeros((np.size(X2)))
 
-        for j in range(0, 100):
-            Y2[j] = (np.sum(bins[int(10*t) , j, :])/nseeds)*100
+            for j in range(0, 100):
+                Y2[j] = (np.sum(bins[int(10*t) , j, :])/nseeds)*100
+
+            LX2.append(X2)
+            LY2.append(Y2)
+            Lt.append(t)
 
         plt.figure()
-        plt.plot(X2, Y2)
+        for i in range(5):
+            plt.plot(LX2[i], LY2[i], label = str(Lt[i]) + " (s)")
         plt.xlabel("Rel Err (%)")
         plt.ylabel("Succes (%)")
-        plt.title("Time = " + str(t) + " (s)")
-        plt.savefig("figs/part2/" + str(alg) + "_" + str(inst) + "_" + str(t) + ".png")
+        plt.legend()
+        plt.savefig("figs/part2/" + str(alg) + "_" + str(inst) + ".png")
 
 
 
