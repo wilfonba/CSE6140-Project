@@ -93,29 +93,28 @@ for inst in ['star2', 'power']:
         #Fixed Cutoff time (in seconds)
         if(inst == "power"):
             if(alg == 'LS1'):
-                t = 30 
+                t = 3 
             else:
-                t = 5
+                t = 0.5
         if(inst == "star2"):
             if(alg == 'LS1'):
-                t = 30 
+                t = 3 
             else:
-                t = 5
+                t = 0.5
 
 
-        tfloat = t / 10.0
         X2 = np.arange(0, 10, 0.1)
         Y2 = np.zeros((np.size(X2)))
 
         for j in range(0, 100):
-            Y2[j] = (np.sum(bins[t , j, :])/nseeds)*100
+            Y2[j] = (np.sum(bins[int(10*t) , j, :])/nseeds)*100
 
         plt.figure()
         plt.plot(X2, Y2)
         plt.xlabel("Rel Err (%)")
         plt.ylabel("Succes (%)")
-        plt.title("Time = " + str(tfloat) + " (s)")
-        plt.savefig("figs/part2/" + str(alg) + "_" + str(inst) + "_" + str(tfloat) + ".png")
+        plt.title("Time = " + str(t) + " (s)")
+        plt.savefig("figs/part2/" + str(alg) + "_" + str(inst) + "_" + str(t) + ".png")
 
 
 
