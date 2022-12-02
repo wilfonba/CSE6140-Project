@@ -30,15 +30,26 @@ def BnB(inst, alg, cutOff, rSeed, G):
             break
 
     # Begin BnB
+    # Preprocess G to remove isolated nodes and presort according to node degree
+    G.remove_nodes_from(list(nx.isolates(G)))
+    G_sorted = sorted(G.nodes(), key=lambda n: G.degree(n), reverse=True)
+    H = nx.Graph()
+    H.add_nodes_from(G_sorted)
+    H.add_edges_from(G.edges(data=True))
+    G = H
+
     # Initialize variables
     C_init = []              # list of the vertices for the Vertex Cover to be returned
     C_list = [[], []]
+    # Used to control lower bound, s.t. frontier updated with new point first
+    C_bounds = [0, float('-inf')]
     G_prime = G.copy()
     B = list(G.nodes)   # Initialize upper bound to all vertices
     sizeB = len(B)      # Size for priority queue
     initial_level = 0   # Starting index for subproblem
     counter = itertools.count()           # Count when entering heap
     count = next(counter)
+    min_bound = compute_lower_bound_simple(G)  # Minimum feasible bound
 
     # Push starting problem to heap
     pq = []
@@ -62,12 +73,13 @@ def BnB(inst, alg, cutOff, rSeed, G):
         level = level + 1
 
         # Check solution for each new configuration
-        for C in C_list:
+        for i in range(len(C_list)):
+            C = C_list[i]
+            bound_limit = C_bounds[i]
             # If C is already larger than B
             # Do not consider as a solution
-            if len(C) > len(B):
+            if len(C) >= len(B):
                 break
-            count = next(counter)
             sol = utils.checker(G, C)
             if sol == True:
                 if len(C) < len(B):
@@ -77,11 +89,25 @@ def BnB(inst, alg, cutOff, rSeed, G):
                     duration = time.time() - start
                     printTraceFile(len(C), duration, traceFile)
             else:  # Add new subproblem to heap
-                if level + 1 <= len(list(G.nodes)):  # Ensure level is inbounds
-                    G_prime = G.subgraph(G.nodes - C)
-                    new_lower_bound = len(C) + compute_lower_bound(G_prime)
+                if level < len(list(G.nodes)):  # Ensure level is inbounds
+                    G_prime = G.subgraph(list(G.nodes)[level:])
+                    # G_prime_lower_bound = compute_lower_bound(cutOff, rSeed, G_prime)
+                    G_prime_lower_bound = compute_lower_bound_simple2(G_prime)
+                    new_lower_bound = len(
+                        C) + G_prime_lower_bound
+                    # Extract highest degree node
+                    degree_bound = max(-list(G.degree)
+                                       [level+1][1], bound_limit)
+                    # new_lower_bound = len(C) + compute_lower_bound_simple(G_prime)
                     if new_lower_bound < sizeB:
-                        hq.heappush(pq, (new_lower_bound, count, C, level))
+                        # if new_lower_bound >= min_bound:
+                        # if G_prime_lower_bound > 0:
+                        max_deg_node = max(
+                            list(G_prime.degree), key=lambda x: x[1])[1]
+                        if max_deg_node > 0:
+                            count = next(counter)
+                            # hq.heappush(pq, (new_lower_bound, count, C, level))
+                            hq.heappush(pq, (degree_bound, -count, C, level))
 
     duration = time.time() - start
 
@@ -97,7 +123,7 @@ def BnB(inst, alg, cutOff, rSeed, G):
 ###############################################################
 
 
-def compute_lower_bound(G):
+def compute_lower_bound_simple(G):
     # Simple lower bound given by K&T 10.2, pg. 556
     nodes = len(list(G.nodes))
     edges = len(list(G.edges))
@@ -106,3 +132,77 @@ def compute_lower_bound(G):
         k = nodes
 
     return k
+
+
+def compute_lower_bound_simple2(G):
+    # Simple lower bound given by K&T 10.2, pg. 556
+    nodes = len(list(G.nodes))
+    edges = len(list(G.edges))
+    maxedge = max(list(G.degree))[1]
+    if maxedge == 0:
+        k = int(math.ceil(edges/nodes))
+        return k
+    k = int(math.ceil(edges/maxedge))
+    if k > nodes:
+        k = nodes
+
+    return k
+###############################################################
+
+
+def compute_lower_bound(cutOff, rSeed, G):
+    # Adapted from Seongmin's approximation algorithm
+    random.seed(rSeed)
+
+    i = 0  # standard iterator
+
+    G1 = G.copy()
+    C = []  # list of the vertices for the Vertex Cover to be returned
+    # getEdge = getRandomEdge
+    getEdge = getMaxDegreeEdge
+
+    start = time.time()
+    while time.time() - start < cutOff:
+        # select an edge (u,v) to be added to C
+        E = G1.edges
+        if len(E) == 0:  # C covers all the edges in G1
+            break
+
+        # Greedily get the edge to be added to C
+        (u, v) = getEdge(E, G1)
+
+        # remove the two endpoints u and v from the graph G1
+        G1.remove_node(u)
+        G1.remove_node(v)
+        assert u not in C
+        assert v not in C
+        C.append(u)
+        C.append(v)
+
+    duration = time.time() - start
+
+    # Trace File for the Greedy Approx algorithm is just one line (https://piazza.com/class/l725zf0sivy53i/post/151_f12)
+    # assert checker(G, C)
+    sizeC = len(C)
+    lowerboundC = int(math.ceil(1/2 * sizeC))
+
+    return lowerboundC
+
+
+def getRandomEdge(E, G1) -> tuple:
+    return random.choice(list(E))
+
+
+def getMaxDegreeEdge(E, G1) -> tuple:
+    maxDegree = 0
+    max_u, max_v = -1, -1
+    for e in E:
+        u, v = e[0], e[1]
+        u_degree = G1.degree[u]
+        v_degree = G1.degree[v]
+        degree = u_degree + v_degree
+        if maxDegree < degree:
+            maxDegree = degree
+            max_u = u
+            max_v = v
+    return max_u, max_v
