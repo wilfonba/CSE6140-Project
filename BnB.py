@@ -41,73 +41,106 @@ def BnB(inst, alg, cutOff, rSeed, G):
     # Initialize variables
     C_init = []              # list of the vertices for the Vertex Cover to be returned
     C_list = [[], []]
+    C = []
+    C_exc = []
     # Used to control lower bound, s.t. frontier updated with new point first
-    C_bounds = [0, float('-inf')]
+    C_bounds = [float('-inf'), 0]
     G_prime = G.copy()
     B = list(G.nodes)   # Initialize upper bound to all vertices
     sizeB = len(B)      # Size for priority queue
-    initial_level = 0   # Starting index for subproblem
+    # initial_level = 0   # Starting index for subproblem
     counter = itertools.count()           # Count when entering heap
     count = next(counter)
-    min_bound = compute_lower_bound_simple(G)  # Minimum feasible bound
 
     # Push starting problem to heap
-    pq = []
-    hq.heapify(pq)
-    hq.heappush(pq, (sizeB, count, C_init, initial_level))
+    frontier = []
+    hq.heapify(frontier)
+    hq.heappush(frontier, (sizeB, count, C_init, C_exc))
 
     # Explore Frontier
     start = time.time()
-    while pq != False and (time.time() - start < cutOff):
-        if len(pq) == 0:
-            break
+    while frontier != [] and (time.time() - start < cutOff):
         # Choose most promising configuration
         # heappop according to lower_bound as key
-        lower_bound, count, C, level = hq.heappop(pq)
+        if len(frontier) == 0:
+            break
+        lower_bound, count, C, C_exc = hq.heappop(frontier)
+
+        # Print Status
+        # print(lower_bound, count, C, "|", end='\r')
+
+        # Construct G_prime according to C, C_exc
+        C_list = [[], []]
+        C_exc_list = [[], []]
+        if C == []:
+            explored_ver = C_exc
+        elif C_exc == []:
+            explored_ver = C
+        else:
+            explored_ver = C.copy()
+            explored_ver.append(C_exc)
+
+        vertices = G.nodes
+        unexplored_ver = [x for x in vertices if x not in explored_ver]
+        G_prime = G.subgraph(unexplored_ver)
+
+        # Determine best vertex according to degree
+        best_ver = max(list(G_prime.degree), key=lambda x: x[1])[0]
+
+        # Find neighboring points
+        neighbors = list(G.neighbors(best_ver))
 
         # Expand into two subchoices
-        # Choice 1: Do not add V[level] to C
-        C_list = [C.copy(), C.copy()]
-        # Choice 2: Do add V[level] to C
-        C_list[1].append(list(G.nodes)[level])
-        level = level + 1
+        # Choice 1: Add best_ver to C
+        # Remove neighbors from consideration
+        C_new = C.copy()
+        C_new.append(best_ver)
+        C_exc_new = C_exc.copy()
+        C_exc_new.extend(neighbors)
+        C_list[0] = C_new
+        C_exc_list[0] = C_exc_new
 
-        # Check solution for each new configuration
+        # Choice 2: Do not add best_ver to C
+        # Add all neighbors to consideration
+        C_new = C.copy()
+        C_new.extend(neighbors)
+        C_exc_new = C_exc.copy()
+        C_exc_new.append(best_ver)
+        C_list[1] = C_new
+        C_exc_list[1] = C_exc_new
+
+        # Check if C is a vertex cover
         for i in range(len(C_list)):
             C = C_list[i]
+            C_exc = C_exc_list[i]
             bound_limit = C_bounds[i]
-            # If C is already larger than B
-            # Do not consider as a solution
-            if len(C) >= len(B):
-                break
             sol = utils.checker(G, C)
             if sol == True:
                 if len(C) < len(B):
-                    B = C  # Update upper bound if better soln found
+                    B = C
                     sizeB = len(B)
                     # Print to trace
                     duration = time.time() - start
                     printTraceFile(len(C), duration, traceFile)
-            else:  # Add new subproblem to heap
-                if level < len(list(G.nodes)):  # Ensure level is inbounds
-                    G_prime = G.subgraph(list(G.nodes)[level:])
-                    # G_prime_lower_bound = compute_lower_bound(cutOff, rSeed, G_prime)
-                    G_prime_lower_bound = compute_lower_bound_simple2(G_prime)
-                    new_lower_bound = len(
-                        C) + G_prime_lower_bound
-                    # Extract highest degree node
-                    degree_bound = max(-list(G.degree)
-                                       [level+1][1], bound_limit)
-                    # new_lower_bound = len(C) + compute_lower_bound_simple(G_prime)
+            else:  # If promising, add new subproblem to frontier
+                # Construct new subgraph
+                explored_ver = C.copy()
+                explored_ver.append(C_exc)
+                vertices = G.nodes
+                unexplored_ver = [x for x in vertices if x not in explored_ver]
+                G_prime = G.subgraph(unexplored_ver)
+
+                # Determine best vertex according to degree
+                G_prime_lower_bound = compute_lower_bound_simple2(G_prime)
+                new_lower_bound = len(C) + G_prime_lower_bound
+                max_deg_node = max(list(G_prime.degree), key=lambda x: x[1])[1]
+                degree_bound = max(-max_deg_node, bound_limit)
+                # degree_bound = -max_deg_node
+
+                if max_deg_node > 0:  # Check to see if subproblem is feasible
                     if new_lower_bound < sizeB:
-                        # if new_lower_bound >= min_bound:
-                        # if G_prime_lower_bound > 0:
-                        max_deg_node = max(
-                            list(G_prime.degree), key=lambda x: x[1])[1]
-                        if max_deg_node > 0:
-                            count = next(counter)
-                            # hq.heappush(pq, (new_lower_bound, count, C, level))
-                            hq.heappush(pq, (degree_bound, -count, C, level))
+                        count = next(counter)
+                        hq.heappush(frontier, (degree_bound, -count, C, C_exc))
 
     duration = time.time() - start
 
@@ -181,7 +214,6 @@ def compute_lower_bound(cutOff, rSeed, G):
 
     duration = time.time() - start
 
-    # Trace File for the Greedy Approx algorithm is just one line (https://piazza.com/class/l725zf0sivy53i/post/151_f12)
     # assert checker(G, C)
     sizeC = len(C)
     lowerboundC = int(math.ceil(1/2 * sizeC))
