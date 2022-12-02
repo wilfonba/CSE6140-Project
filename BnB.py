@@ -20,14 +20,23 @@ def BnB(inst, alg, cutOff, rSeed, G):
 
     i = 0  # standard iterator
     while (1 and i <= 100):
-        if os.path.exists("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" +
-                          str(rSeed) + "_" + str(i) + ".trace"):
+        if os.path.exists("OutputFiles/" + inst + "_" + alg +
+                          "_" + str(cutOff) + "_" + str(i) + ".trace"):
             i = i + 1
             # print("Here")
         else:
-            traceFile = open("OutputFiles/" + inst + "_" + alg + "_" + str(cutOff) + "_" +
-                             str(rSeed) + "_" + str(i) + ".trace", "x")
+            traceFile = open("OutputFiles/" + inst + "_" + alg +
+                             "_" + str(cutOff) + "_" + str(i) + ".trace", "x")
             break
+    # while (1 and i <= 100):
+    #     if os.path.exists("TestOutput/" + inst + "_" + alg +
+    #                       "_" + str(cutOff) + "_" + str(i) + ".trace"):
+    #         i = i + 1
+    #         # print("Here")
+    #     else:
+    #         traceFile = open("TestOutput/" + inst + "_" + alg +
+    #                          "_" + str(cutOff) + "_" + str(i) + ".trace", "x")
+    #         break
 
     # Begin BnB
     # Preprocess G to remove isolated nodes and presort according to node degree
@@ -55,7 +64,7 @@ def BnB(inst, alg, cutOff, rSeed, G):
     # Push starting problem to heap
     frontier = []
     hq.heapify(frontier)
-    hq.heappush(frontier, (sizeB, count, C_init, C_exc))
+    hq.heappush(frontier, (sizeB, count, C_init, C_exc, sizeB))
 
     # Explore Frontier
     start = time.time()
@@ -64,7 +73,10 @@ def BnB(inst, alg, cutOff, rSeed, G):
         # heappop according to lower_bound as key
         if len(frontier) == 0:
             break
-        lower_bound, count, C, C_exc = hq.heappop(frontier)
+        degree_bound, count, C, C_exc, new_lower_bound = hq.heappop(frontier)
+        # Re-evaluate if our lower bound is greater than best solution
+        if new_lower_bound > sizeB:
+            pass
 
         # Print Status
         # print(lower_bound, count, C, "|", end='\r')
@@ -88,7 +100,7 @@ def BnB(inst, alg, cutOff, rSeed, G):
         best_ver = max(list(G_prime.degree), key=lambda x: x[1])[0]
 
         # Find neighboring points
-        neighbors = list(G.neighbors(best_ver))
+        neighbors = list(G_prime.neighbors(best_ver))
 
         # Expand into two subchoices
         # Choice 1: Add best_ver to C
@@ -106,6 +118,9 @@ def BnB(inst, alg, cutOff, rSeed, G):
         C_new.extend(neighbors)
         C_exc_new = C_exc.copy()
         C_exc_new.append(best_ver)
+        n_of_n = find_n_of_n(G_prime, neighbors, best_ver)
+        C_exc_new.extend(n_of_n)
+        C_exc_new = list(set(C_exc_new))
         C_list[1] = C_new
         C_exc_list[1] = C_exc_new
 
@@ -130,17 +145,19 @@ def BnB(inst, alg, cutOff, rSeed, G):
                 unexplored_ver = [x for x in vertices if x not in explored_ver]
                 G_prime = G.subgraph(unexplored_ver)
 
-                # Determine best vertex according to degree
-                G_prime_lower_bound = compute_lower_bound_simple2(G_prime)
-                new_lower_bound = len(C) + G_prime_lower_bound
+                # Check to see if subproblem is feasible
                 max_deg_node = max(list(G_prime.degree), key=lambda x: x[1])[1]
-                degree_bound = max(-max_deg_node, bound_limit)
-                # degree_bound = -max_deg_node
+                if max_deg_node > 0:
+                    # Determine best vertex according to degree
+                    G_prime_lower_bound = compute_lower_bound_simple(G_prime)
+                    new_lower_bound = len(C) + G_prime_lower_bound
+                    degree_bound = max(-max_deg_node, bound_limit)
+                    # degree_bound = -max_deg_node
 
-                if max_deg_node > 0:  # Check to see if subproblem is feasible
                     if new_lower_bound < sizeB:
                         count = next(counter)
-                        hq.heappush(frontier, (degree_bound, -count, C, C_exc))
+                        hq.heappush(frontier, (degree_bound, -
+                                    count, C, C_exc, new_lower_bound))
 
     duration = time.time() - start
 
@@ -155,14 +172,31 @@ def BnB(inst, alg, cutOff, rSeed, G):
 
 ###############################################################
 
+# Find neighbors of neighbors
+
+
+def find_n_of_n(G_prime, neighbors, best_ver):
+    n_of_ = []
+    n_of_n = []
+    for n in neighbors:
+        n_ = list(G_prime.neighbors(n))
+        n_of_.extend(n_)
+
+    n_of_n = list(set(n_of_))
+    n_of_n.remove(best_ver)
+
+    return n_of_n
+
+###############################################################
+
 
 def compute_lower_bound_simple(G):
     # Simple lower bound given by K&T 10.2, pg. 556
     nodes = len(list(G.nodes))
     edges = len(list(G.edges))
     k = int(math.ceil(edges/nodes))
-    if k > nodes:
-        k = nodes
+    # if k > nodes:
+    #     k = nodes
 
     return k
 
@@ -171,13 +205,13 @@ def compute_lower_bound_simple2(G):
     # Simple lower bound given by K&T 10.2, pg. 556
     nodes = len(list(G.nodes))
     edges = len(list(G.edges))
-    maxedge = max(list(G.degree))[1]
-    if maxedge == 0:
-        k = int(math.ceil(edges/nodes))
-        return k
+    maxedge = max(list(G.degree), key=lambda x: x[1])[1]
+    # if maxedge == 0:
+    #     k = int(math.ceil(edges/nodes))
+    #     return k
     k = int(math.ceil(edges/maxedge))
-    if k > nodes:
-        k = nodes
+    # if k > nodes:
+    #     k = nodes
 
     return k
 ###############################################################
