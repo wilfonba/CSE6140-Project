@@ -36,14 +36,14 @@ def readInstance(inst):
 
 
 # Reading input arguments
-# inst = str(sys.argv[2])
-# alg =  str(sys.argv[4])
-# cutOff = float(sys.argv[6])
-# rSeed = int(sys.argv[8])
-inst = 'hep-th'
-alg = "LS1"
-cutOff = 30
-rSeed = 234
+inst = str(sys.argv[2])
+alg =  str(sys.argv[4])
+cutOff = float(sys.argv[6])
+rSeed = int(sys.argv[8])
+# inst = 'star2'
+# alg = "LS1"
+# cutOff = 10
+# rSeed = 234
 
 print("Running " + alg + " on instance " + inst + " with time limit " + str(cutOff) +
       " seconds and random seed " + str(rSeed))

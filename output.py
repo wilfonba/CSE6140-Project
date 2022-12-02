@@ -14,7 +14,7 @@ def printSolutionFile(inst, alg, cutOff, rSeed, qual, MVC):
     
     f.write(str(qual) + "\n")
     for i in range(0,qual):
-        f.write(str(MVC[i]) + ", ")
+        f.write(str(MVC[i]) + ",")
     
     f.close()
 

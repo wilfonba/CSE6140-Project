@@ -8,6 +8,8 @@ import math
 import collections as col
 import numpy as np
 import sys
+from utils import checker
+import csv
 
 ###############################################################
 
@@ -27,7 +29,7 @@ def getMaxDegreeEdge(E, G1) -> tuple:
 
 ###############################################################
 
-def greedyIC(t0, cutOff, G):
+def greedyIC(G, nE):
     GT = G.copy()
     E = GT.edges()
     VC = []
@@ -39,10 +41,7 @@ def greedyIC(t0, cutOff, G):
         GT.remove_node(v)
 
         VC.append(u)
-        VC.append(v)
-
-        if time.time() - t0 > cutOff:
-            sys.exit("No IC Found, provide a longer cutoff")     
+        VC.append(v)   
     return VC
 
 ###############################################################
@@ -86,29 +85,34 @@ def LS1(inst, alg, cutOff, rSeed, G):
             break
 
     nV = len(G.nodes) # number of nodes
+    nE = len(G.edges) # number of edges
     ucE = [] # array of uncovered edges
 
     gamma = 0.5*nV # mean edge weight for forgetting
     rho = 0.3 # "forget" parameter
 
-    t0 = time.time()
-
     eWS = nx.convert.to_dict_of_dicts(G, edge_data=1)
     dScores = [0]*(nV)
     confChange = [1]*(nV)
 
-    VC1 = greedyIC(t0, cutOff, G)
+    #VC1 = greedyIC(G, nE)
     VC = list(G.nodes())
-    
+
+    with open('VCIC.txt', newline='') as f:
+        reader = csv.reader(f)
+        VC1 = list(reader)
+
+    VC1 = VC1[0]
+
     for i in G.nodes():
         if i not in VC1:
             removeNode(VC, ucE, dScores, str(i), G, eWS, confChange)
             VC.remove(str(i))
-    
-    i = 0
+
+    t0 = time.time()
+
     while (time.time() - t0 < cutOff):
         while len(ucE) == 0:
-            print("Soln:", len(VC))
             printTraceFile(len(VC), time.time() - t0, traceFile)
             VCStar = VC.copy()
             maxC = -float('inf')
@@ -168,7 +172,7 @@ def LS1(inst, alg, cutOff, rSeed, G):
                     VC.remove(str(i))
             for e in G.edges():
                 eWS[e[0]][e[1]] = rho*eWS[e[0]][e[1]]
-    i = 0
 
     print("Result: " + str(len(VCStar)))
+    checker(G,VCStar)
     return VCStar

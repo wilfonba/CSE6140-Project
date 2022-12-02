@@ -45,8 +45,6 @@ def LS2(inst, alg, cutOff, rSeed, G):
     is_sol = np.zeros((NV,), dtype = bool)
     candidates = np.zeros((NV,), dtype = bool)
 
-    t0 = time.time()
-
     #Initialize a Maximal Solution
     for i in range(NV):
         if(tau[i] == 0):
@@ -63,6 +61,8 @@ def LS2(inst, alg, cutOff, rSeed, G):
 
     count = 0
     nrestarts = 1000
+
+    t0 = time.time()
 
     while(count < nrestarts):
         count += 1

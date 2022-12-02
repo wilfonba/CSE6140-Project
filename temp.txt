@@ -1,0 +1,2 @@
+Running LS1 on instance power with time limit 5.0 seconds and random seed 45386
+Result: 2211
