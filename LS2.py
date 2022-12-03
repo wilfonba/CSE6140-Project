@@ -8,7 +8,8 @@ import math
 import collections as col
 import numpy as np
 
-
+#Computes Max independent set by first computing a maximal independent set and computing 
+#2-improvements until no such improvement can be found. Once this is done, the code is restarted 
 
 def LS2(inst, alg, cutOff, rSeed, G):
 
@@ -124,7 +125,7 @@ def LS2(inst, alg, cutOff, rSeed, G):
                 break
             prev_soln = new_soln
 
-
+        #Ensure the solution is maximal    
         for i in range(NV):
             if(tau[i] == 0 and is_sol[i] == False):
                 is_sol[i] = True
@@ -140,6 +141,7 @@ def LS2(inst, alg, cutOff, rSeed, G):
         last_iter[np.where(is_sol == False)[0]] += 1
         last_iter[np.where(is_sol == True)[0]]= 0 
 
+        #If improvement print new solution
         if(new_soln > best_soln):
             best_soln = new_soln    
             print("soln", (NV - new_soln))    
@@ -153,12 +155,13 @@ def LS2(inst, alg, cutOff, rSeed, G):
                 return C
 
         #Perturb New Solution
+        #Add a new element that has not been included for a while
         pertbs = np.where(last_iter == np.amax(last_iter))[0]
         elem = pertbs[np.random.randint(np.size(pertbs))]
         is_sol[elem] = True
         candidates[elem] = True
         
-
+        #Remove neighbors of current element
         neighb = np.array(list(G[gV[elem]])).astype(int) - 1 
         tau[neighb[np.where(is_sol[neighb] == False)[0]]] += 1
         remove_elem = neighb[np.where(is_sol[neighb] == True)[0]]
@@ -166,6 +169,7 @@ def LS2(inst, alg, cutOff, rSeed, G):
         candidates[remove_elem] = False
         tau[remove_elem] += 1
 
+        #Adjust tau values of neighboring elements of removed elements
         for k in remove_elem:
             neighbk = np.array(list(G[gV[k]])).astype(int) - 1
 
@@ -176,6 +180,7 @@ def LS2(inst, alg, cutOff, rSeed, G):
                 neighbw = neighbw[np.where(is_sol[neighbw] == True)[0]]
                 candidates[neighbw] = True
 
+        #Make the solution maximal        
         for i in range(NV):
             if(tau[i] == 0 and is_sol[i] == False):
                 is_sol[i] = True
