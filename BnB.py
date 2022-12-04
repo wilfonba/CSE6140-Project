@@ -15,6 +15,34 @@ import utils
 import time
 
 
+# BnB function for executing Branch-and-Bound algorithm
+#   along with required subfunctions.
+#
+# Inputs:
+#   inst    - Output filename
+#   alg     - "BnB" for output filename
+#   cutOff  - Cutoff time in seconds
+#   rSeed   - Unused
+#   G       - Graph object for computing vertex cover
+#
+# Outputs:
+#   C       - Best vertex cover found within cutoff
+#
+"""
+BnB calculates a vertex cover using a Branch-and-Bound algorithm. 
+
+Each step the algorithm explores the latest subproblem from a frontier set of pending subproblems. 
+Each subproblem is defined as:
+    F(i) = [current_vertex, included, (parent_vertex, parent_included)]
+
+For each iteration the algorithm reduces the current subgraph depending on whether the current vertex is included or not included. If the vertex is included then it is added to the vertex cover and removed from the subgraph. If the vertex is not included then its neighbors are added to the vertex cover and removed from the subgraph. [Akiba et al. 2016]
+
+Then the partial vertex cover C is checked to determine if it is a valid vertex cover to G. If so the algorithm is set to backtrack, and if the solution is better, B is overwritten with C. If not, the current subgraph is checked for its lower bound. If the subgraph is promising (LB < |B|) then the algorithm takes the highest degree node from the current subgraph and expands it into two new subproblems. One subproblem includes the new vertex in the vertex cover while the other excludes it. Otherwise, if not promising, the algorithm is set to backtrack. 
+
+If the algorithm backtracks, it undoes the changes to the subgraph to return to the parent state. The algorithm continues until all subproblems in the frontier set have been considered or the time elapsed becomes greater than the cutoff time.
+"""
+
+
 def BnB(inst, alg, cutOff, rSeed, G):
     random.seed(rSeed)
 
@@ -208,7 +236,7 @@ def compute_lower_bound_simple(G):
 
 
 def compute_lower_bound_simple2(G):
-    # Simple lower bound given by K&T 10.2, pg. 556
+    # Simple lower bound given by Wang et al.
     nodes = len(list(G.nodes))
     edges = len(list(G.edges))
     maxedge = max(list(G.degree), key=lambda x: x[1])[1]
