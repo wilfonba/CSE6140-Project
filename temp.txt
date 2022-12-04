@@ -1,2 +1,1 @@
-Running LS1 on instance power with time limit 5.0 seconds and random seed 45386
-Result: 2211
+Running BnB on instance star2 with time limit 1800.0 seconds and random seed 94159

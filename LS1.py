@@ -95,14 +95,8 @@ def LS1(inst, alg, cutOff, rSeed, G):
     dScores = [0]*(nV)
     confChange = [1]*(nV)
 
-    #VC1 = greedyIC(G, nE)
+    VC1 = greedyIC(G, nE)
     VC = list(G.nodes())
-
-    with open('VCIC.txt', newline='') as f:
-        reader = csv.reader(f)
-        VC1 = list(reader)
-
-    VC1 = VC1[0]
 
     for i in G.nodes():
         if i not in VC1:
