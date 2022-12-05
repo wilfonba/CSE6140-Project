@@ -1,3 +1,19 @@
+# Local Search 1
+#
+# The algorithm in this file heuristically finds a minimum vertex cover
+# via a k-vertex cover finding algorithm. It use a two-step exchange
+# process with linear time complexity and a edge weight with forgetting 
+# approach to increase performance.
+#
+# inputs:
+#   inst:   The graph instance
+#   alg:    The algorithm be ran (for printing trace files)
+#   cutOff: A cutoff time in seconds
+#   rSeed:  An integer random seed
+#   G:      The input graph as a networkx graph
+# Output:
+#   VCstar: the best vertex cover found
+
 import random
 import networkx as nx
 import time
@@ -14,6 +30,13 @@ import csv
 ###############################################################
 
 def getMaxDegreeEdge(E, G1) -> tuple:
+    # Returns maximum degree edge from a list of edges
+    # Inputs:
+    #   E: a list of edges
+    #   G: a networkx grap
+    # Outputs:
+    #   max_u: one vertex of the maximum degree edge
+    #   max_v: one vertex of the maximum degree edge
     maxDegree = 0
     max_u, max_v = -1, -1
     for e in E:
@@ -30,6 +53,8 @@ def getMaxDegreeEdge(E, G1) -> tuple:
 ###############################################################
 
 def greedyIC(G, nE):
+    # Find an initial condition using a greedy approximation algorithm
+    # Inputs:
     GT = G.copy()
     E = GT.edges()
     VC = []

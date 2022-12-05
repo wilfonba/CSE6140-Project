@@ -1,3 +1,5 @@
+# This file performs batch runs for generating time data
+
 import os
 import random as r
 import glob
@@ -10,7 +12,7 @@ for name in glob.glob(path):
     name = name.split('.')[0]
     name = name.split('/')[1]
     graphs.append(name)
-cutOff = 1800
+cutOff = 3600
 graphs = [str(sys.argv[2])]
 print(graphs)
 ALG = ['BnB']

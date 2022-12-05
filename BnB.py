@@ -1,3 +1,18 @@
+# Branch and Bound
+#
+# Computes an exact minimum vertex cover using the branch and bound approach
+# The lower bound is computed by using a highest degree first approximation
+# algorithm.
+#
+# inputs:
+#   inst:   The graph instance
+#   alg:    The algorithm be ran (for printing trace files)
+#   cutOff: A cutoff time in seconds
+#   rSeed:  An integer random seed
+#   G:      The input graph as a networkx graph
+# Output:
+#   C: the best vertex cover found
+
 import random
 import networkx as nx
 import time

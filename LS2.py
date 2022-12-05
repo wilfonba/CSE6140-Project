@@ -1,3 +1,18 @@
+# Local Search 2
+#
+# Computes Max independent set by first computing a maximal independent 
+# set and computing 2-improvements until no such improvement can be found. 
+# Once this is done, the code is restarted 
+#
+# inputs:
+#   inst:   The graph instance
+#   alg:    The algorithm be ran (for printing trace files)
+#   cutOff: A cutoff time in seconds
+#   rSeed:  An integer random seed
+#   G:      The input graph as a networkx graph
+# Output:
+#   C: the best vertex cover found
+
 import random
 import networkx as nx
 import time
@@ -8,8 +23,7 @@ import math
 import collections as col
 import numpy as np
 
-#Computes Max independent set by first computing a maximal independent set and computing 
-#2-improvements until no such improvement can be found. Once this is done, the code is restarted 
+
 
 def LS2(inst, alg, cutOff, rSeed, G):
 

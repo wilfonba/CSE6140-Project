@@ -18,10 +18,12 @@ from LS1 import LS1
 from LS2 import LS2
 from output import printSolutionFile
 
-# Function for reading the .graph files and creating a networkx graph
-
-
 def readInstance(inst):
+    # Read .graph file and create a networkx graph
+    # Inputs:
+    #   inst: The graph instance to use
+    # Outputs:
+    #   G: The networkx graph generated
     f = open("DATA/" + inst + ".graph", 'r')
     lines = f.readline().split(" ")
     V = int(lines[0])
@@ -40,10 +42,6 @@ inst = str(sys.argv[2])
 alg =  str(sys.argv[4])
 cutOff = float(sys.argv[6])
 rSeed = int(sys.argv[8])
-# inst = 'star2'
-# alg = "LS1"
-# cutOff = 10
-# rSeed = 234
 
 print("Running " + alg + " on instance " + inst + " with time limit " + str(cutOff) +
       " seconds and random seed " + str(rSeed))
@@ -59,12 +57,12 @@ if (alg == "BnB"):
     C = BnB(inst, alg, cutOff, rSeed, G)
 elif (alg == "Approx"):
     # Run Approx
-    a = 2  # filler
     C = Approx(inst, alg, cutOff, rSeed, G)
 elif (alg == "LS1"):
     # Run LS1
     C = LS1(inst, alg, cutOff, rSeed, G)
 elif (alg == "LS2"):
+    # Run LS2
     C = LS2(inst, alg, cutOff, rSeed, G)
 else:
     print("Invalid algorithm")

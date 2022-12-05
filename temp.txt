@@ -1,1 +1,0 @@
-Running BnB on instance star2 with time limit 1800.0 seconds and random seed 94159

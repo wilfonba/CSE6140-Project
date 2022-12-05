@@ -1,3 +1,6 @@
+# This file reads trace files and creates a csv for use with
+# an online box plot generator.
+
 import numpy as np
 import os
 import glob

@@ -72,7 +72,7 @@ for i in range(len(graphs)):
     line += dataOut[i][0]
     line += ' & '
     for j in range(len(alg)):
-        line += str('%4.2f' % dataOut[i][j*3+1])
+        line += str('%4.4f' % dataOut[i][j*3+1])
         line += ' & '
         line += str(int(dataOut[i][j*3+2]))
         line += ' & '

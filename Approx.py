@@ -1,4 +1,18 @@
-# Edge Deletion
+# Approx
+#
+# This is an implementation of an approximation algorithm in which the
+# endpoints of the highest degree edge at each iteration are removed until
+# the set of edges is the empty set. This is a two approximation
+#
+# inputs:
+#   inst:   The graph instance
+#   alg:    The algorithm be ran (for printing trace files)
+#   cutOff: A cutoff time in seconds
+#   rSeed:  An integer random seed
+#   G:      The input graph as a networkx graph
+# Output:
+#   C: the best vertex cover found
+
 import random
 import networkx as nx
 import time
