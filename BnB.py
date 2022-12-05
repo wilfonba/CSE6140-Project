@@ -1,8 +1,7 @@
 # Branch and Bound
 #
 # Computes an exact minimum vertex cover using the branch and bound approach.
-# Vertices are considered by using a highest degree first approximation
-# algorithm.
+# Vertices are considered in order of highest degree first.
 #
 # inputs:
 #   inst:   The graph instance
