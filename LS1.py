@@ -115,6 +115,7 @@ def LS1(inst, alg, cutOff, rSeed, G):
     VC1 = greedyIC(G, nE)
     VC = list(G.nodes())
 
+    # use the removeNode function to get a list of uncovered edges
     for i in G.nodes():
         if i not in VC1:
             removeNode(VC, ucE, dScores, str(i), G, eWS, confChange)
@@ -124,6 +125,8 @@ def LS1(inst, alg, cutOff, rSeed, G):
 
     while (time.time() - t0 < cutOff):
         while len(ucE) == 0:
+            # a vertex cover has been found. Save it and begin
+            # looking for a k-1 vertex cover
             printTraceFile(len(VC), time.time() - t0, traceFile)
             VCStar = VC.copy()
             maxC = -float('inf')
@@ -170,7 +173,7 @@ def LS1(inst, alg, cutOff, rSeed, G):
             total += int(eWS[e[0]][e[1]])
         mW = total/len(eWS)
 
-        # Update edge weights
+        # forget edge weights
         if mW > gamma:
             dScores = [0]*(nV+1)
             ucE = []
