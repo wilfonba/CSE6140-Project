@@ -1,3 +1,6 @@
+# This file reads trace files and creates a table in LaTeX's tabular
+# syntax for use for the comprehensive time analysis section of the report
+
 import os
 import random as r
 import glob
