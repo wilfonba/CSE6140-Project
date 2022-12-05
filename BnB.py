@@ -1,48 +1,18 @@
 # Branch and Bound
 #
-# Computes an exact minimum vertex cover using the branch and bound approach
-# The lower bound is computed by using a highest degree first approximation
+# Computes an exact minimum vertex cover using the branch and bound approach.
+# Vertices are considered by using a highest degree first approximation
 # algorithm.
 #
 # inputs:
 #   inst:   The graph instance
-#   alg:    The algorithm be ran (for printing trace files)
+#   alg:    The algorithm ran (for printing trace files)
 #   cutOff: A cutoff time in seconds
-#   rSeed:  An integer random seed
+#   rSeed:  An integer random seed (unused)
 #   G:      The input graph as a networkx graph
 # Output:
-#   C: the best vertex cover found
+#   C: the best vertex cover found within cutoff time
 
-import random
-import networkx as nx
-import time
-import os
-import random as rand
-from output import printTraceFile
-import math
-import collections as col
-from utils import checker
-import sys
-from output import printSolutionFile
-import heapq as hq
-import itertools
-import utils
-import time
-
-
-# BnB function for executing Branch-and-Bound algorithm
-#   along with required subfunctions.
-#
-# Inputs:
-#   inst    - Output filename
-#   alg     - "BnB" for output filename
-#   cutOff  - Cutoff time in seconds
-#   rSeed   - Unused
-#   G       - Graph object for computing vertex cover
-#
-# Outputs:
-#   C       - Best vertex cover found within cutoff
-#
 """
 BnB calculates a vertex cover using a Branch-and-Bound algorithm. 
 
@@ -56,6 +26,22 @@ Then the partial vertex cover C is checked to determine if it is a valid vertex 
 
 If the algorithm backtracks, it undoes the changes to the subgraph to return to the parent state. The algorithm continues until all subproblems in the frontier set have been considered or the time elapsed becomes greater than the cutoff time.
 """
+
+import random
+import networkx as nx
+import time
+import os
+import random as rand
+from output import printTraceFile
+import math
+import collections as col
+from utils import checker
+import sys
+from output import printSolutionFile
+# import heapq as hq
+# import itertools
+import utils
+import time
 
 
 def BnB(inst, alg, cutOff, rSeed, G):
@@ -71,24 +57,10 @@ def BnB(inst, alg, cutOff, rSeed, G):
             traceFile = open("OutputFiles/" + inst + "_" + alg +
                              "_" + str(cutOff) + "_" + str(i) + ".trace", "x")
             break
-    # while (1 and i <= 100):
-    #     if os.path.exists("TestOutput/" + inst + "_" + alg +
-    #                       "_" + str(cutOff) + "_" + str(i) + ".trace"):
-    #         i = i + 1
-    #         # print("Here")
-    #     else:
-    #         traceFile = open("TestOutput/" + inst + "_" + alg +
-    #                          "_" + str(cutOff) + "_" + str(i) + ".trace", "x")
-    #         break
 
     # Begin BnB
-    # Preprocess G to remove isolated nodes and presort according to node degree
+    # Preprocess G to remove isolated nodes
     G.remove_nodes_from(list(nx.isolates(G)))
-    # G_sorted = sorted(G.nodes(), key=lambda n: G.degree(n), reverse=True)
-    # H = nx.Graph()
-    # H.add_nodes_from(G_sorted)
-    # H.add_edges_from(G.edges(data=True))
-    # G = H
 
     # Initialize variables
     # Define initial problem
@@ -156,7 +128,7 @@ def BnB(inst, alg, cutOff, rSeed, G):
             backtrack = True
             if len(C) < len(B):
                 # print("Solution Better")
-                # If soln then update bounds
+                # If better soln then update bounds
                 B = C
                 sizeB = len(B)
                 # Print to trace
@@ -165,18 +137,15 @@ def BnB(inst, alg, cutOff, rSeed, G):
                 printTraceFile(len(C), duration, traceFile)
         else:
             # Else
-            # Calculate lower bound
             # Create new subproblems
             # print("Consider subproblem")
-            # if len(list(G_prime.nodes)) == 0:
-            #     print("Empty Subgraph")
             if len(list(G_prime.nodes)) > 0:  # Make sure subgraph isn't empty
+                # Calculate lower bound
                 G_prime_lower_bound = compute_lower_bound_simple(G_prime)
                 # G_prime_lower_bound = compute_lower_bound_simple2(G_prime)
                 # G_prime_lower_bound = compute_lower_bound(
                 #     cutOff, rSeed, G_prime)
                 lower_bound = len(C) + G_prime_lower_bound
-                # print(lower_bound)
                 # print("Consider subproblem, bound: ",
                 #       lower_bound, " sizeB: ", sizeB)
                 if lower_bound < sizeB:
@@ -204,7 +173,7 @@ def BnB(inst, alg, cutOff, rSeed, G):
                     # print("Nodes to add back: ", len(explored_set) - index)
                     # for i in range(index, len(explored_set)):
                     while index < len(explored_set):
-                        # Add back vertex
+                        # Add back vertex to subgraph
                         removed_vertex = explored_set.pop()
                         removed_included = include_set.pop()
                         G_prime.add_node(removed_vertex)
@@ -262,7 +231,7 @@ def compute_lower_bound_simple2(G):
 
 
 def compute_lower_bound(cutOff, rSeed, G):
-    # Adapted from Seongmin's approximation algorithm
+    # Lower bound adapted from Seongmin's approximation algorithm
     random.seed(rSeed)
 
     i = 0  # standard iterator
