@@ -1,6 +1,6 @@
 # CSE6140-Project
 
-Our code takes as input the various graphs in DATA and can perform Branch and Bound (BnB.py), Approximation (Approx.py) and Local Search (LS1.py, LS2.py) 
+Our project is written in Python. It takes as input the various graphs in DATA and can perform Branch and Bound (BnB.py), Approximation (Approx.py) and Local Search (LS1.py, LS2.py) 
 algorithms. The code stores the solution and trace file in the output directory. The execuable can be run with the following command: 
 
 python3 main.py --inst <filename> --alg [BnB/Approx/LS1/LS2] --cutoff <time> --seed <random seed> 
